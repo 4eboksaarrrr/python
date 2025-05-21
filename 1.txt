@@ -595,29 +595,39 @@ while run:
                 player.shooting_flip = player.flip
                 if not player.flip:
                     right_hand_offset_x = right_hand_x
-                    right_hand_pos_x = player.rect.x + right_hand_offset_x - camera_scroll
-                    right_hand_pos_y = player.rect.y + right_hand_y
+                    right_hand_pos_x_screen = player.rect.x - camera_scroll + right_hand_offset_x
+                    right_hand_pos_y_screen = player.rect.y + right_hand_y
                 else:
                     frame_width = player.image.get_width()
                     right_hand_offset_x = right_hand_x
-                    right_hand_pos_x = player.rect.x + (frame_width - right_hand_offset_x - right_hand.get_width()) - camera_scroll
-                    right_hand_pos_y = player.rect.y + right_hand_y
+                    right_hand_pos_x_screen = player.rect.x - camera_scroll + (
+                                frame_width - right_hand_offset_x - right_hand.get_width())
+                    right_hand_pos_y_screen = player.rect.y + right_hand_y
 
-                bullet_spawn_x = right_hand_pos_x + right_hand.get_width() // 2
-                bullet_spawn_y = right_hand_pos_y + right_hand.get_height() // 2
+                # Центр руки на экране:
+                bullet_spawn_x_screen = right_hand_pos_x_screen + right_hand.get_width() // 2
+                bullet_spawn_y_screen = right_hand_pos_y_screen + right_hand.get_height() // 2
 
+                # Переводим в мировые координаты:
+                bullet_spawn_x_world = bullet_spawn_x_screen + camera_scroll // 2
+                bullet_spawn_y_world = bullet_spawn_y_screen 
+
+                # Теперь из этой точки считаем направление:
                 mouse_x, mouse_y = pg.mouse.get_pos()
-                vector_x = mouse_x - bullet_spawn_x
-                vector_y = mouse_y - bullet_spawn_y
-                norm = math.sqrt(vector_x**2 + vector_y**2)
+                mouse_world_x = mouse_x + camera_scroll
+                mouse_world_y = mouse_y
+
+                vector_x = mouse_world_x - bullet_spawn_x_world
+                vector_y = mouse_world_y - bullet_spawn_y_world
+                norm = math.sqrt(vector_x ** 2 + vector_y ** 2)
                 if norm == 0:
                     norm = 1
                 direction = (vector_x / norm, vector_y / norm)
                 bullet_angle = (180 / math.pi) * -math.atan2(vector_y, vector_x) - 90
 
                 bullet_offset = right_hand.get_height() * 1.8
-                start_x = bullet_spawn_x + direction[0] * bullet_offset
-                start_y = bullet_spawn_y + direction[1] * bullet_offset - 2
+                start_x = bullet_spawn_x_world + direction[0] * bullet_offset
+                start_y = bullet_spawn_y_world + direction[1] * bullet_offset - 2
 
                 new_bullet = Bullet((start_x, start_y), direction, bullet_angle)
                 bullets.append(new_bullet)
@@ -710,37 +720,19 @@ while run:
 
     draw_gui(ammo, health)
 
-    pg.draw.rect(screen, (255, 0, 0), zombie.rect, 2)  # красная рамка зомби
     for bullet in bullets[:]:
-        pg.draw.rect(screen, (0, 255, 0), bullet.rect, 2)  # зелёная рамка пули
         bullet.update()
         bullet.draw(screen)
 
         if zombie.alive and not zombie.marked_for_death:
             if bullet.rect.colliderect(zombie.rect):
 
-                print(
-                    f"CHECK: bullet.rect={bullet.rect} zombie.rect={zombie.rect} bullet center={bullet.rect.center} zombie center={zombie.rect.center} flip={zombie.flip}")
-
                 if not zombie.flip:
                     offset_x = bullet.rect.x - zombie.rect.x
                 else:
                     offset_x = bullet.rect.x - (zombie.rect.right - zombie.mask.get_size()[0])
                 offset_y = bullet.rect.y - zombie.rect.y
-                print(
-                    f"""
-                    === COLLISION DEBUG ===
-                    zombie.flip: {zombie.flip}
-                    zombie.rect: {zombie.rect} (x={zombie.rect.x}, y={zombie.rect.y}, w={zombie.rect.width}, h={zombie.rect.height})
-                    zombie.mask.size: {zombie.mask.get_size() if hasattr(zombie.mask, 'get_size') else 'no get_size'}
-                    bullet.rect: {bullet.rect} (x={bullet.rect.x}, y={bullet.rect.y}, w={bullet.rect.width}, h={bullet.rect.height})
-                    bullet.mask.size: {bullet.mask.get_size() if hasattr(bullet.mask, 'get_size') else 'no get_size'}
-                    offset_x: {offset_x}
-                    offset_y: {offset_y}
-                    mask.overlap: {zombie.mask.overlap(bullet.mask, (offset_x, offset_y))}
-                    =======================
-                    """
-                )
+
                 if zombie.mask.overlap(bullet.mask, (offset_x, offset_y)):
                     now = pg.time.get_ticks()
                     if bullet.hit_time is None:
@@ -761,12 +753,7 @@ while run:
         reload_rect = gui_reload.get_rect(center=(screen_width // 2, 30))
         screen.blit(gui_reload, reload_rect)
 
-    # if hasattr(zombie.mask, 'get_bounding_rect'):
-    #     brect = zombie.mask.get_bounding_rect()
-    #     print(f"flip={zombie.flip} maskrect={brect} rect={zombie.rect}")
-    # else:
-    #     rects = zombie.mask.get_bounding_rects()
-    #     print(f"flip={zombie.flip} mask rects={rects} rect={zombie.rect}")
+
     pg.display.update()
 
 pg.quit()
