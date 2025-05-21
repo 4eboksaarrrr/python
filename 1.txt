@@ -2,10 +2,11 @@ import sys
 import pygame as pg
 import math
 
+
 pg.init()
 
-screen_width = 600
-screen_height = 436
+screen_width = 384
+screen_height = 216
 screen = pg.display.set_mode(
     [screen_width, screen_height],
     pg.RESIZABLE | pg.SCALED | pg.FULLSCREEN
@@ -393,17 +394,31 @@ class Zombies():
             temp_list.append(img)
         self.animation_list.append(temp_list)
 
-        self.image = self.animation_list[self.action][self.frame_index]
-        self.rect = self.image.get_rect()
+        self.image = None
+        self.mask = None
+        self.rect = None
+        self.frame_index = 0
+        self.update_sprite()
         self.pos = [float(self.rect.x), float(self.rect.y)]
         self.update_hitbox()
+
+    def update_sprite(self):
+        """Всегда обновляет image, mask и rect под текущий кадр и flip."""
+        self.image = self.animation_list[self.action][self.frame_index]
+        flipped_image = pg.transform.flip(self.image, self.flip, False)
+        self.mask = pg.mask.from_surface(flipped_image)
+        # rect нужен НЕ от flipped_image, а от self.image (чтобы координаты совпадали с логикой движения)
+        if self.rect is None:
+            self.rect = self.image.get_rect()
+        else:
+            center = self.rect.center
+            self.rect = self.image.get_rect()
+            self.rect.center = center
 
     def update_hitbox(self):
         new_width = int(self.rect.width * 0.6)
         new_x = self.rect.centerx - new_width // 2
         self.hitbox = pg.Rect(new_x, self.rect.y + 20, new_width, int(self.rect.height) / 1.5)
-        # Добавляем маску для хитбокса зомби — по изображению
-        self.mask = pg.mask.from_surface(pg.transform.flip(self.image, self.flip, False))
 
     def update_animation(self):
         ANIMATION_COOLDOWN = 100
@@ -411,22 +426,19 @@ class Zombies():
         if current_time - self.update_time > ANIMATION_COOLDOWN:
             self.update_time = current_time
             self.frame_index += 1
-
-            # Если зомби в анимации атаки и наступил нужный кадр (например, индекс 2)
             if self.action == 2 and self.frame_index == 2 and not self.attack_done:
                 if current_time - self.last_attack_time >= self.attack_delay:
                     if self.rect.colliderect(player.rect):
                         global health
-                        health = max(health - 2, 0)  # Отнимаем 2 очка здоровья
+                        health = max(health - 2, 0)
                         self.attack_done = True
                         self.last_attack_time = current_time
-
-            # Если анимация закончилась, сбрасываем счетчик и флаг
             if self.frame_index >= len(self.animation_list[self.action]):
                 self.frame_index = 0
                 if self.action == 2:
                     self.attack_done = False
-        self.image = self.animation_list[self.action][self.frame_index]
+        self.update_sprite()
+        self.update_hitbox()
 
     def update_action(self, new_action):
         if new_action != self.action:
@@ -435,22 +447,27 @@ class Zombies():
             self.update_time = pg.time.get_ticks()
             if new_action == 2:
                 self.attack_done = False
+            self.update_sprite()
+            self.update_hitbox()
 
     def move_towards_player(self, player):
-        threshold = 25  # Если зомби достаточно близко к игроку, он переходит в режим атаки
+        threshold = 25
         if abs(self.rect.centerx - player.rect.centerx) > threshold:
             if self.rect.centerx < player.rect.centerx:
                 self.pos[0] += self.speed
-                self.flip = False
+                if self.flip:
+                    self.flip = False
+                    self.update_sprite()  # обязательно, если flip поменялся!
             else:
                 self.pos[0] -= self.speed
-                self.flip = True
+                if not self.flip:
+                    self.flip = True
+                    self.update_sprite()  # обязательно, если flip поменялся!
             self.rect.x = int(self.pos[0])
-            # Обновляем хитбокс после смещения
             self.update_hitbox()
-            self.update_action(1)  # Анимация ходьбы
+            self.update_action(1)
         else:
-            self.update_action(2)  # Анимация атаки
+            self.update_action(2)
 
     def draw(self, camera_scroll):
         # Рисуем тень, аналогичную тени игрока
@@ -693,18 +710,44 @@ while run:
 
     draw_gui(ammo, health)
 
+    pg.draw.rect(screen, (255, 0, 0), zombie.rect, 2)  # красная рамка зомби
     for bullet in bullets[:]:
+        pg.draw.rect(screen, (0, 255, 0), bullet.rect, 2)  # зелёная рамка пули
         bullet.update()
         bullet.draw(screen)
 
         if zombie.alive and not zombie.marked_for_death:
-            if bullet.rect.colliderect(zombie.hitbox):
-                now = pg.time.get_ticks()
-                if bullet.hit_time is None:
-                    bullet.hit_time = now
-                if zombie.hit_time is None:
-                    zombie.hit_time = now
-                    zombie.marked_for_death = True  # <<-- теперь зомби "помечен" на смерть
+            if bullet.rect.colliderect(zombie.rect):
+
+                print(
+                    f"CHECK: bullet.rect={bullet.rect} zombie.rect={zombie.rect} bullet center={bullet.rect.center} zombie center={zombie.rect.center} flip={zombie.flip}")
+
+                if not zombie.flip:
+                    offset_x = bullet.rect.x - zombie.rect.x
+                else:
+                    offset_x = bullet.rect.x - (zombie.rect.right - zombie.mask.get_size()[0])
+                offset_y = bullet.rect.y - zombie.rect.y
+                print(
+                    f"""
+                    === COLLISION DEBUG ===
+                    zombie.flip: {zombie.flip}
+                    zombie.rect: {zombie.rect} (x={zombie.rect.x}, y={zombie.rect.y}, w={zombie.rect.width}, h={zombie.rect.height})
+                    zombie.mask.size: {zombie.mask.get_size() if hasattr(zombie.mask, 'get_size') else 'no get_size'}
+                    bullet.rect: {bullet.rect} (x={bullet.rect.x}, y={bullet.rect.y}, w={bullet.rect.width}, h={bullet.rect.height})
+                    bullet.mask.size: {bullet.mask.get_size() if hasattr(bullet.mask, 'get_size') else 'no get_size'}
+                    offset_x: {offset_x}
+                    offset_y: {offset_y}
+                    mask.overlap: {zombie.mask.overlap(bullet.mask, (offset_x, offset_y))}
+                    =======================
+                    """
+                )
+                if zombie.mask.overlap(bullet.mask, (offset_x, offset_y)):
+                    now = pg.time.get_ticks()
+                    if bullet.hit_time is None:
+                        bullet.hit_time = now
+                    if zombie.hit_time is None:
+                        zombie.hit_time = now
+                        zombie.marked_for_death = True
 
         # Удаляем пулю через задержку
         if bullet.hit_time is not None and pg.time.get_ticks() - bullet.hit_time > 120:
@@ -718,6 +761,12 @@ while run:
         reload_rect = gui_reload.get_rect(center=(screen_width // 2, 30))
         screen.blit(gui_reload, reload_rect)
 
+    # if hasattr(zombie.mask, 'get_bounding_rect'):
+    #     brect = zombie.mask.get_bounding_rect()
+    #     print(f"flip={zombie.flip} maskrect={brect} rect={zombie.rect}")
+    # else:
+    #     rects = zombie.mask.get_bounding_rects()
+    #     print(f"flip={zombie.flip} mask rects={rects} rect={zombie.rect}")
     pg.display.update()
 
 pg.quit()
