@@ -561,8 +561,7 @@ while run:
                 else:
                     frame_width = player.image.get_width()
                     right_hand_offset_x = right_hand_x
-                    right_hand_pos_x = player.rect.x + (
-                            frame_width - right_hand_offset_x - right_hand.get_width()) - camera_scroll
+                    right_hand_pos_x = player.rect.x + (frame_width - right_hand_offset_x - right_hand.get_width()) - camera_scroll
                     right_hand_pos_y = player.rect.y + right_hand_y
 
                 bullet_spawn_x = right_hand_pos_x + right_hand.get_width() // 2
@@ -571,7 +570,7 @@ while run:
                 mouse_x, mouse_y = pg.mouse.get_pos()
                 vector_x = mouse_x - bullet_spawn_x
                 vector_y = mouse_y - bullet_spawn_y
-                norm = math.sqrt(vector_x ** 2 + vector_y ** 2)
+                norm = math.sqrt(vector_x**2 + vector_y**2)
                 if norm == 0:
                     norm = 1
                 direction = (vector_x / norm, vector_y / norm)
@@ -666,7 +665,7 @@ while run:
     # Обновление и отрисовка зомби:
 
     if zombie.alive:
-        zombie.move_towards_player(player)
+        # zombie.move_towards_player(player)
         zombie.update_animation()
         zombie.draw(camera_scroll)
 
@@ -674,14 +673,6 @@ while run:
 
     for bullet in bullets[:]:
         bullet.update()
-
-        # Если пуля улетела за пределы уровня, удаляем её
-        if (bullet.pos[0] < level_left_bound or bullet.pos[0] > level_right_bound or
-                bullet.pos[1] < -100 or bullet.pos[1] > screen_height + 100):
-            bullets.remove(bullet)
-            continue
-
-        # Отрисовка пули с учётом сдвига камеры
         bullet.draw(screen)
 
         if zombie.alive:
