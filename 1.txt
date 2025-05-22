@@ -593,43 +593,34 @@ while run:
                 is_shooting = True
                 shooting_start_time = pg.time.get_ticks()
                 player.shooting_flip = player.flip
-                if not player.flip:
-                    right_hand_offset_x = right_hand_x
-                    right_hand_pos_x_screen = player.rect.x - camera_scroll + right_hand_offset_x
-                    right_hand_pos_y_screen = player.rect.y + right_hand_y
-                else:
-                    frame_width = player.image.get_width()
-                    right_hand_offset_x = right_hand_x
-                    right_hand_pos_x_screen = player.rect.x - camera_scroll + (
-                                frame_width - right_hand_offset_x - right_hand.get_width())
-                    right_hand_pos_y_screen = player.rect.y + right_hand_y
 
-                # Центр руки на экране:
-                bullet_spawn_x_screen = right_hand_pos_x_screen + right_hand.get_width() // 2
-                bullet_spawn_y_screen = right_hand_pos_y_screen + right_hand.get_height() // 2
+                # 1. Центр руки (как в вращающейся руке)
+                center_x = player.rect.x - camera_scroll + player.image.get_width() // 2
+                center_y = player.rect.y + player.image.get_height() // 2
 
-                # Переводим в мировые координаты:
-                bullet_spawn_x_world = bullet_spawn_x_screen + camera_scroll // 2
-                bullet_spawn_y_world = bullet_spawn_y_screen 
-
-                # Теперь из этой точки считаем направление:
+                # 2. Получаем позицию мыши (экранные координаты)
                 mouse_x, mouse_y = pg.mouse.get_pos()
-                mouse_world_x = mouse_x + camera_scroll
-                mouse_world_y = mouse_y
-
-                vector_x = mouse_world_x - bullet_spawn_x_world
-                vector_y = mouse_world_y - bullet_spawn_y_world
-                norm = math.sqrt(vector_x ** 2 + vector_y ** 2)
+                vector_x = mouse_x - center_x
+                vector_y = mouse_y - center_y
+                norm = math.hypot(vector_x, vector_y)
                 if norm == 0:
                     norm = 1
                 direction = (vector_x / norm, vector_y / norm)
+
+                # 3. Вычисляем угол для пули (аналогично вращающейся руке)
                 bullet_angle = (180 / math.pi) * -math.atan2(vector_y, vector_x) - 90
 
+                # 4. Смещение пули от центра руки (как во втором примере)
                 bullet_offset = right_hand.get_height() * 1.8
-                start_x = bullet_spawn_x_world + direction[0] * bullet_offset
-                start_y = bullet_spawn_y_world + direction[1] * bullet_offset - 2
+                start_x = center_x + direction[0] * bullet_offset
+                start_y = center_y + direction[1] * bullet_offset - 2
 
-                new_bullet = Bullet((start_x, start_y), direction, bullet_angle)
+                # 5. Переводим координаты в мировые (чтобы пуля жила в мировой системе, как зомби)
+                start_x_world = start_x 
+                start_y_world = start_y
+
+                # 6. Спавним пулю
+                new_bullet = Bullet((start_x_world, start_y_world), direction, bullet_angle)
                 bullets.append(new_bullet)
 
         if event.type == pg.KEYDOWN:
