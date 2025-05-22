@@ -267,7 +267,6 @@ class Human(pg.sprite.Sprite):
             extra_right = -4
             extra_left = -4
 
-
         if not self.flip:
             right_hand_offset_x = right_hand_x + extra_right
             left_hand_offset_x = left_hand_x + extra_left
@@ -288,14 +287,12 @@ class Human(pg.sprite.Sprite):
         right_hand_pos_y = self.rect.y + right_hand_y
         left_hand_pos_y = self.rect.y + left_hand_y
 
-
         blit_hand_towards_mouse(
             screen,
             base_left_hand_img,
             left_hand_pos_x + base_left_hand_img.get_width() // 2,
             left_hand_pos_y + base_left_hand_img.get_height() // 2
         )
-
 
         draw_rect = self.rect.copy()
         draw_rect.x -= camera_scroll
@@ -323,7 +320,6 @@ class Human(pg.sprite.Sprite):
             else:
                 right_hand_img = right_hand
 
-
         blit_hand_towards_mouse(
             screen,
             right_hand_img,
@@ -331,32 +327,23 @@ class Human(pg.sprite.Sprite):
             right_hand_pos_y + right_hand_img.get_height() // 2
         )
 
-
         self.update_hitbox()
-
-    # скрыть
-        # hitbox_debug = self.hitbox.copy()
-        # hitbox_debug.x -= camera_scroll
-        # pg.draw.rect(screen, (255, 0, 0), hitbox_debug, 2)
-
 
 player = Human('player', 370, 157, 1)
 camera_scroll = 0
 
 # -------------- ЗЗЗЗОМБИ"!!!! -------------- #
-
-class Zombies():
-    def __init__(self, zombie_type, speed):
+class Zombie:
+    def __init__(self, zombie_type, x, y):
         self.alive = True
         self.char_type = zombie_type
-        self.speed = speed
+        self.speed = 0.35  # ЯВНО медленнее игрока (player.speed = 1)
         self.direction = 1
         self.flip = False
         self.animation_list = []
         self.frame_index = 0
         self.update_time = pg.time.get_ticks()
-        self.action = 0
-        self.reversed_walk = False
+        self.action = 0  # 0 - idle, 1 - walk, 2 - attack, 3 - death
 
         temp_list = []
         for i in range(5):
@@ -384,27 +371,107 @@ class Zombies():
 
         self.image = self.animation_list[self.action][self.frame_index]
         self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.hitbox = self.rect.copy()
+        self.attack_cooldown = 900  # ms
+        self.last_attack_time = 0
 
-zombie_def = Zombies('zombie_def', 1)
+    def update_hitbox(self):
+        offset_x = int(self.rect.width * 0.25)
+        offset_y = int(self.rect.height * 0.2)
+        width = int(self.rect.width * 0.5)
+        height = int(self.rect.height * 0.6)
+        self.hitbox = pg.Rect(self.rect.x + offset_x,
+                              self.rect.y + offset_y,
+                              width,
+                              height)
+
+    def move_and_attack(self, player):
+        # Расстояние между центрами
+        dx = player.rect.centerx - self.rect.centerx
+        distance = abs(dx)
+        # Если зомби достаточно близко, атакует
+        if distance <= 25:
+            self.update_action(2)  # attack
+            now = pg.time.get_ticks()
+            if now - self.last_attack_time > self.attack_cooldown:
+                global health
+                health = max(0, health - 1)
+                self.last_attack_time = now
+        else:
+            # Иначе идёт к игроку
+            self.update_action(1)  # walk
+            if dx < 0:
+                self.direction = -1
+                self.flip = True
+                self.rect.x -= self.speed
+            else:
+                self.direction = 1
+                self.flip = False
+                self.rect.x += self.speed
+
+    def update_animation(self):
+        # Анимация с разной скоростью для разных действий
+        if self.action == 1:
+            ANIMATION_COOLDOWN = 120  # walk
+        elif self.action == 2:
+            ANIMATION_COOLDOWN = 80   # attack
+        else:
+            ANIMATION_COOLDOWN = 200  # idle
+
+        frame_to_show = int(self.frame_index)
+        self.image = self.animation_list[self.action][frame_to_show]
+        if pg.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
+            self.update_time = pg.time.get_ticks()
+            self.frame_index += 1
+        if self.frame_index >= len(self.animation_list[self.action]):
+            self.frame_index = 0
+
+    def update_action(self, new_action):
+        if new_action != self.action:
+            self.action = new_action
+            self.frame_index = 0
+            self.update_time = pg.time.get_ticks()
+
+    def draw(self, camera_scroll):
+        # Тень
+        shadow = self.image.copy().convert_alpha()
+        shadow.fill((0, 0, 0, 80), special_flags=pg.BLEND_RGBA_MULT)
+        shadow = pg.transform.flip(shadow, self.flip, True)
+        shadow_rect = self.rect.copy()
+        shadow_rect.x -= camera_scroll
+        shadow_rect.top = self.rect.bottom
+        screen.blit(shadow, shadow_rect)
+
+        draw_rect = self.rect.copy()
+        draw_rect.x -= camera_scroll
+        screen.blit(pg.transform.flip(self.image, self.flip, False), draw_rect)
+        self.update_hitbox()
+        # debug
+        # hitbox_debug = self.hitbox.copy()
+        # hitbox_debug.x -= camera_scroll
+        # pg.draw.rect(screen, (255, 0, 0), hitbox_debug, 2)
+
+
+# Пример спавна зомби
+zombies = []
+zombies.append(Zombie('zombie_def', 500, 157))
+# Можно добавить еще, например: zombies.append(Zombie('zombie_def', 800, 157))
 
 # -------------- Доп код: вздрищеные пули -------------- #
-
 shooting_frames = []
 for i in range(6):
     img = pg.image.load(f'player/shooting/{i}.png')
     shooting_frames.append(img)
-
 
 bullet_frames = []
 for i in range(8):
     img = pg.image.load(f'player/bullet/{i}.png')
     bullet_frames.append(img)
 
-
 is_shooting = False
 shooting_start_time = 0
 shooting_frame_duration = 50
-
 
 bullets = []
 
@@ -412,11 +479,6 @@ class Bullet:
     bullet_rotation_offset = 0  # можно скорректировать при необходимости
 
     def __init__(self, pos, direction, angle):
-        """
-        pos: стартовая позиция пули (tuple)
-        direction: нормализованный вектор направления (dx, dy)
-        angle: угол, рассчитанный для поворота пули в направлении движения
-        """
         self.pos = [pos[0], pos[1]]
         self.dir = direction
         self.speed = 8
@@ -431,12 +493,12 @@ class Bullet:
     def draw(self, surface):
         current_time = pg.time.get_ticks()
         elapsed = current_time - self.spawn_time
-        # Заменяем циклическую анимацию на однократное проигрывание
-        frame_index = min(elapsed // self.frame_duration, len(bullet_frames) - 1)
+        frame_index = min(int(elapsed // self.frame_duration), len(bullet_frames) - 1)
         img = bullet_frames[frame_index]
         rotated_img = pg.transform.rotate(img, self.angle + Bullet.bullet_rotation_offset)
         rect = rotated_img.get_rect(center=(round(self.pos[0]), round(self.pos[1])))
         surface.blit(rotated_img, rect)
+
 # -------------------------------------------------------------------------- #
 
 run = True
@@ -560,6 +622,13 @@ while run:
     draw_bg(camera_scroll)
     player.draw(camera_scroll)
     draw_gui(ammo, health)
+
+    # --- ZOMBIES: движение, атака, анимации, отрисовка
+    for zombie in zombies:
+        if zombie.alive:
+            zombie.move_and_attack(player)
+            zombie.update_animation()
+            zombie.draw(camera_scroll)
 
     for bullet in bullets:
         bullet.update()
