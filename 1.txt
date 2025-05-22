@@ -337,7 +337,8 @@ class Zombie:
     def __init__(self, zombie_type, x, y):
         self.alive = True
         self.char_type = zombie_type
-        self.speed = 0.35  # ЯВНО медленнее игрока (player.speed = 1)
+        self.speed = 0.35  # Медленнее игрока
+        self.pos_x = x     # Для дробных перемещений
         self.direction = 1
         self.flip = False
         self.animation_list = []
@@ -376,6 +377,18 @@ class Zombie:
         self.attack_cooldown = 900  # ms
         self.last_attack_time = 0
 
+        self.knockbacked = False
+        self.knockback_dir = 0
+        self.knockback_start_time = 0
+        self.knockback_delay = 280  # задержка перед началом отскока (мс)
+        self.knockback_anim_duration = 250  # время "пролета" отскока (мс)
+        self.freeze_duration = 1000  # замирает после (мс)
+        self.pos_x = x
+        self._knockback_distance = 0
+        self._knockback_from_x = x
+        self._knockback_applied = False
+
+
     def update_hitbox(self):
         offset_x = int(self.rect.width * 0.25)
         offset_y = int(self.rect.height * 0.2)
@@ -387,28 +400,55 @@ class Zombie:
                               height)
 
     def move_and_attack(self, player):
-        # Расстояние между центрами
+        now = pg.time.get_ticks()
+        if self.knockbacked:
+            elapsed = now - self.knockback_start_time
+
+            # 1. Ждем задержку перед стартом отскока
+            if elapsed < self.knockback_delay:
+                self.update_action(0)  # idle
+                return
+
+            # 2. Анимируем "отъезжание"
+            anim_time = elapsed - self.knockback_delay
+            if anim_time < self.knockback_anim_duration:
+                progress = anim_time / self.knockback_anim_duration
+                shift = self._knockback_distance * progress * self.knockback_dir
+                self.pos_x = self._knockback_from_x + shift
+                self.rect.x = int(self.pos_x)
+                self.update_action(0)  # idle
+                return
+
+            # 3. Замереть после отскока
+            if anim_time < self.knockback_anim_duration + self.freeze_duration:
+                self.pos_x = self._knockback_from_x + self._knockback_distance * self.knockback_dir
+                self.rect.x = int(self.pos_x)
+                self.update_action(0)
+                return
+
+            # 4. Вернуться в обычный режим
+            self.knockbacked = False
+
+        # --- обычное поведение ---
         dx = player.rect.centerx - self.rect.centerx
         distance = abs(dx)
-        # Если зомби достаточно близко, атакует
         if distance <= 25:
             self.update_action(2)  # attack
-            now = pg.time.get_ticks()
             if now - self.last_attack_time > self.attack_cooldown:
                 global health
                 health = max(0, health - 1)
                 self.last_attack_time = now
         else:
-            # Иначе идёт к игроку
-            self.update_action(1)  # walk
+            self.update_action(1)
             if dx < 0:
                 self.direction = -1
                 self.flip = True
-                self.rect.x -= self.speed
+                self.pos_x -= self.speed
             else:
                 self.direction = 1
                 self.flip = False
-                self.rect.x += self.speed
+                self.pos_x += self.speed
+            self.rect.x = int(self.pos_x)
 
     def update_animation(self):
         # Анимация с разной скоростью для разных действий
@@ -433,6 +473,18 @@ class Zombie:
             self.frame_index = 0
             self.update_time = pg.time.get_ticks()
 
+    def knockback(self, from_x, distance=20):
+        if not self.knockbacked:
+            if self.rect.centerx < from_x:
+                self.knockback_dir = -1
+            else:
+                self.knockback_dir = 1
+            self.knockbacked = True
+            self.knockback_start_time = pg.time.get_ticks()
+            self._knockback_distance = distance
+            self._knockback_from_x = self.pos_x
+            self._knockback_applied = False
+
     def draw(self, camera_scroll):
         # Тень
         shadow = self.image.copy().convert_alpha()
@@ -455,7 +507,7 @@ class Zombie:
 
 # Пример спавна зомби
 zombies = []
-zombies.append(Zombie('zombie_def', 500, 157))
+zombies.append(Zombie('zombie_def', 500, 119))
 # Можно добавить еще, например: zombies.append(Zombie('zombie_def', 800, 157))
 
 # -------------- Доп код: вздрищеные пули -------------- #
@@ -489,6 +541,8 @@ class Bullet:
     def update(self):
         self.pos[0] += self.dir[0] * self.speed
         self.pos[1] += self.dir[1] * self.speed
+
+
 
     def draw(self, surface):
         current_time = pg.time.get_ticks()
@@ -546,25 +600,39 @@ while run:
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_a:
                 moving_left = True
+
             if event.key == pg.K_d:
                 moving_right = True
+
             if event.key == pg.K_e:
                 kicking = True
                 player.update_action(2)
+                # Проверяем пинок — сразу при нажатии
+                for zombie in zombies:
+                    if zombie.alive:
+                        dx = abs(player.rect.centerx - zombie.rect.centerx)
+                        if 22 < dx <= 35:
+                            zombie.knockback(player.rect.centerx, distance=20)
+
             if event.key == pg.K_r and not is_reloading:
                 is_reloading = True
+
                 reload_start_time = pg.time.get_ticks()
             if event.key == pg.K_z:
                 current_time = pg.time.get_ticks()
+
                 if current_time >= bandages_next_use_time and not bandages_active:
                     bandages_active = True
                     bandages_activation_start_time = current_time
                     bandages_last_heal_time = current_time
+
             if event.key == pg.K_h:
                 current_time = pg.time.get_ticks()
+
                 if current_time >= apteka_next_use_time:
                     health = min(health + 8, max_health)
                     apteka_next_use_time = current_time + apteka_cooldown
+
             if event.key == pg.K_ESCAPE:
                 run = False
 
