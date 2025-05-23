@@ -1,17 +1,28 @@
 import sys
+import time
+
+import pygame
 import pygame as pg
+
 import math
-pg.init()
+import random
+
+bg_main_flor_pos = 0, -40
+bg_1 = 0, -40
+bg_2 = 0, -40
+bg_3 = 0, -40
+
+bg_zaliv = 0, -40
+
+particles = 5
+fov = 5
+
 
 screen_width = 384
 screen_height = 216
-screen = pg.display.set_mode(
-    [screen_width, screen_height],
-    pg.RESIZABLE | pg.SCALED | pg.FULLSCREEN
-)
+screen = pg.display.set_mode([screen_width, screen_height], pygame.RESIZABLE | pygame.SCALED | pygame.FULLSCREEN)
 pg.display.set_caption("Game")
 black = (0, 0, 0)
-
 
 SCREEN_WIDTH = screen_width
 SCREEN_HEIGHT = screen_height
@@ -23,18 +34,15 @@ bg_2 = (0, -40)
 bg_3 = (0, -40)
 bg_zaliv = (0, -40)
 
-particles = 5
-fov = 5
-continue_button = 0
-
-number_screen = "game"
+number_screen = 1
 clock = pg.time.Clock()
-difficulty = 0
 
 coins = 0
 ammo = 5
 health = 10
 max_health = 14
+
+difficulty = 0
 
 level_left_bound = 0
 level_right_bound = 1850
@@ -56,6 +64,106 @@ bandages_next_use_time = 0
 
 apteka_cooldown = 60000
 apteka_next_use_time = 0
+
+
+# ---------загрузка картинок для меню-------
+
+fon_menu = pygame.image.load('backgrounds/menu_fon_defoult.png')
+fon_ready_ornot = pg.image.load('backgrounds/start_new_game_menu.png')
+fon_choose_difficulty = pg.image.load('backgrounds/choose_difficulty_menu.png')
+fon_settings_display = pg.image.load('backgrounds/menu_setting_display.png')
+fon_settings_sounds = pg.image.load('backgrounds/menu_setting_sounds.png')
+fon_menu_continue = pg.image.load('backgrounds/menu_fon_defoult_continue.png')
+fon_menu_death = pg.image.load('backgrounds/you_are_death_screen.png')
+EXAMPLE_GAME = pg.image.load('backgrounds/EXAMPLE_GAME.png')
+
+loading_screen_1 =pg.image.load('loading_screen/1.png')
+loading_screen_2 =pg.image.load('loading_screen/2.png')
+loading_screen_3 =pg.image.load('loading_screen/3.png')
+loading_screen_4 =pg.image.load('loading_screen/4.png')
+loading_screen_5 =pg.image.load('loading_screen/5.png')
+loading_screen_6 =pg.image.load('loading_screen/6.png')
+loading_screen_7 =pg.image.load('loading_screen/7.png')
+loading_screen_8 =pg.image.load('loading_screen/8.png')
+loading_screen_9 =pg.image.load('loading_screen/9.png')
+loading_screen_10 =pg.image.load('loading_screen/10.png')
+loading_screen_11 =pg.image.load('loading_screen/11.png')
+loading_screen_12 =pg.image.load('loading_screen/12.png')
+loading_screen_13 =pg.image.load('loading_screen/13.png')
+loading_screen_14 =pg.image.load('loading_screen/14.png')
+
+
+
+
+
+
+button_play_not_select = pygame.image.load('./menu_buttons/button_start_not_selected.png')
+button_play_select = pygame.image.load('./menu_buttons/button_start_selected.png')
+
+button_settings_not_selected = pygame.image.load('./menu_buttons/button_settings_not_selected.png')
+button_settings_selected = pygame.image.load('./menu_buttons/button_settings_selected.png')
+
+button_exit_not_selected = pygame.image.load('./menu_buttons/button_exit_not_selected.png')
+button_exit_selected = pygame.image.load('./menu_buttons/button_exit_selected.png')
+
+button_yes_not_pressed = pg.image.load('./menu_buttons/button_yes_not_pressed.png')
+button_yes_pressed = pg.image.load('./menu_buttons/button_yes_pressed.png')
+
+button_no_not_pressed = pg.image.load('./menu_buttons/button_no_not_pressed.png')
+button_no_pressed = pg.image.load('./menu_buttons/button_no_pressed.png')
+
+button_easy_pressed = pg.image.load('./menu_buttons/easy_button_pressed.png')
+button_easy_not_pressed = pg.image.load('./menu_buttons/easy_button_not_pressedt.png')
+
+button_medium_pressed = pg.image.load('./menu_buttons/button_medium_pressed.png')
+button_medium_not_pressed = pg.image.load('./menu_buttons/button_medium_not_pressed.png')
+
+button_hard_pressed = pg.image.load('./menu_buttons/button_hard_pressed.png')
+button_hard_not_pressed = pg.image.load('./menu_buttons/button_hard_not_pressed.png')
+
+button_sounds_pressed = pg.image.load('./menu_buttons/button_sounds_pressed.png')
+button_sounds_not_pressed = pg.image.load('./menu_buttons/button_sounds_not_pressed.png')
+
+button_display_pressed = pg.image.load('./menu_buttons/button_display_pressed.png')
+button_display_not_pressed = pg.image.load('./menu_buttons/button_display_not_pressed.png')
+
+button_back_pressed = pg.image.load('./menu_buttons/button_back_pressed.png')
+button_back_not_pressed = pg.image.load('./menu_buttons/button_back_not_pressed.png')
+
+button_minus_pressed = pg.image.load('./menu_buttons/button_minus_pressed.png')
+button_minus_not_pressed = pg.image.load('./menu_buttons/button_minus_not_pressed.png')
+
+button_plus_pressed = pg.image.load('./menu_buttons/button_plus_pressed.png')
+button_plus_not_pressed = pg.image.load('./menu_buttons/button_plus_not_pressed.png')
+
+button_continue_pressed = pg.image.load('./menu_buttons/button_continue_pressed.png')
+button_continue_not_pressed = pg.image.load('./menu_buttons/button_continue_not_pressed.png')
+
+
+scala_particles_0 = pg.image.load('./settings_display_scale/particles_0.png')
+scala_particles_1 = pg.image.load('./settings_display_scale/particles_1.png')
+scala_particles_2 = pg.image.load('./settings_display_scale/particles_2.png')
+scala_particles_3 = pg.image.load('./settings_display_scale/particles_3.png')
+scala_particles_4 = pg.image.load('./settings_display_scale/particles_4.png')
+scala_particles_5 = pg.image.load('./settings_display_scale/particles_5.png')
+scala_particles_6 = pg.image.load('./settings_display_scale/particles_6.png')
+scala_particles_7 = pg.image.load('./settings_display_scale/particles_7.png')
+scala_particles_8 = pg.image.load('./settings_display_scale/particles_8.png')
+scala_particles_9 = pg.image.load('./settings_display_scale/particles_9.png')
+scala_particles_10 = pg.image.load('./settings_display_scale/particles_10.png')
+scala_particles_11 = pg.image.load('./settings_display_scale/particles_11.png')
+scala_particles_12 = pg.image.load('./settings_display_scale/particles_12.png')
+
+button_left_pressed = pg.image.load('./menu_buttons/button_leftt_pressed.png')
+button_left_not_pressed = pg.image.load('./menu_buttons/button_leftt_not_pressed.png')
+
+button_right_pressed = pg.image.load('./menu_buttons/button_right_pressed.png')
+button_right_not_pressed = pg.image.load('./menu_buttons/button_right_not_pressed.png')
+
+back_death_najata = pg.image.load('./menu_buttons/back_death_najata.png')
+back_death_ne_najata =  pg.image.load('./menu_buttons/back_death_ne_najata.png')
+
+# ---------загрузка картинок для игры-------
 
 background_fon = pg.image.load('backgrounds/zalivka2.png')
 bg_main_bliz = pg.image.load('backgrounds/bg_main_1.png')
@@ -96,6 +204,308 @@ gui_reload = pg.image.load('ui/ammo/reload_gui.png')
 right_hand = pg.image.load('player/right_hand.png')
 left_hand = pg.image.load('player/left_hand.png')
 
+# -----------------------------функции меню---------------------------------------------------
+def shadowing(n_s, next_screen):
+    global number_screen
+    black = (0, 0, 0)
+    fade_surface = pygame.Surface(screen.get_size())
+    fade_surface.fill(black)
+    for alpha in range(0, 256, 5):
+        fade_surface.set_alpha(alpha)
+        screen.blit(fade_surface, (0, 0))
+        pygame.display.update()
+        clock.tick(60)
+    number_screen = n_s
+    next_screen.set_alpha(0)
+    for alpha in range(0, 256, 5):
+        next_screen.set_alpha(alpha)
+        screen.blit(next_screen, (0, 0))
+        pygame.display.update()
+        clock.tick(60)
+
+def screen_main_menu_no_continue():
+    global number_screen, button_play_not_select_col, fon_fade, mouse_pos, button_settings_not_select_col, button_exit_not_select_col, button_info_not_select_col, screen_for_fade, fade_screen, pressed
+    screen.blit(fon_menu, (0, 0))
+    screen.blit(button_play_not_select, (54, 80))
+
+    button_play_not_select_col = button_play_not_select.get_rect(x=54, y=80)
+    button_settings_not_select_col = button_play_not_select.get_rect(x=42, y=128)
+    button_exit_not_select_col = button_play_not_select.get_rect(x=60, y=156)
+
+    mouse_pos = pg.mouse.get_pos()
+    pressed = pg.mouse.get_pressed()
+
+    if button_play_not_select_col.collidepoint(mouse_pos):
+        screen.blit(button_play_select, (54, 80))
+    elif button_settings_not_select_col.collidepoint(mouse_pos):
+        screen.blit(button_settings_selected, (42, 128))
+    elif button_exit_not_select_col.collidepoint(mouse_pos):
+        screen.blit(button_exit_selected, (60, 156))
+    if pressed[0]:
+        if button_play_not_select_col.collidepoint(mouse_pos):
+            shadowing(2,fon_ready_ornot)
+
+
+
+
+        elif button_settings_not_select_col.collidepoint(mouse_pos):
+            shadowing(6,fon_settings_display)
+
+
+
+        elif button_exit_not_select_col.collidepoint(mouse_pos):
+            black = (0, 0, 0)
+            fade_surface = pygame.Surface(screen.get_size())
+            fade_surface.fill(black)
+            for alpha in range(0, 256, 5):
+                fade_surface.set_alpha(alpha)
+                screen.blit(fade_surface, (0, 0))
+                pygame.display.update()
+                clock.tick(60)
+            sys.exit()
+
+def screen_ready_to_play():
+    global button_no_not_pressed_col, button_yes_not_pressed_col, mouse_pos, pressed, number_screen
+
+    screen.blit(fon_ready_ornot, (0, 0))
+
+    button_no_not_pressed_col = button_no_pressed.get_rect(x=209, y=110)
+    button_yes_not_pressed_col = button_yes_pressed.get_rect(x=130, y=110)
+
+    mouse_pos = pg.mouse.get_pos()
+    pressed = pg.mouse.get_pressed()
+
+    if button_no_not_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_no_pressed, (209, 110))
+    elif button_yes_not_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_yes_pressed, (130, 110))
+
+    if pressed[0]:
+        if button_no_not_pressed_col.collidepoint(mouse_pos):
+            shadowing(1,fon_menu)
+
+
+        if button_yes_not_pressed_col.collidepoint(mouse_pos):
+            shadowing(3,fon_choose_difficulty)
+
+def screen_choose_difficulty():
+    global difficulty, number_screen
+    screen.blit(fon_choose_difficulty, (0, 0))
+
+    button_easy_pressed_col = button_easy_pressed.get_rect(x=130, y=82)
+    button_medium_pressed_col = button_medium_pressed.get_rect(x=122, y=114)
+    button_hard_pressed_col = button_hard_pressed.get_rect(x=136, y=148)
+
+    mouse_pos = pg.mouse.get_pos()
+    pressed1 = pg.mouse.get_pressed()
+
+    if button_easy_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_easy_pressed, (130, 82))
+    elif button_medium_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_medium_pressed, (122, 114))
+    elif button_hard_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_hard_pressed, (136, 148))
+
+    if pressed1[0]:
+        if button_easy_pressed_col.collidepoint(mouse_pos) and pressed1[0]:
+            difficulty = 1
+            shadowing(4,loading_screen_1)
+
+
+
+        if button_medium_pressed_col.collidepoint(mouse_pos) and pressed1[0]:
+            difficulty = 2
+            shadowing(4,loading_screen_1)
+
+
+
+        if button_hard_pressed_col.collidepoint(mouse_pos) and pressed1[0]:
+            difficulty = 3
+            shadowing(4,loading_screen_1)
+
+def loading_screen_popa():
+    pg.time.delay(500)
+    images = [pg.image.load(f'loading_screen/{i}.png') for i in range(1, 15)]
+
+    for img in images:
+        screen.blit(img, (0, 0))
+        pg.display.update()
+        pg.time.delay(100)
+
+    pg.time.delay(500)
+
+    shadowing('game',EXAMPLE_GAME)
+
+
+def screen_settings_display():
+    global number_screen, particles, fov, button1, button2, button3
+    screen.blit(fon_settings_display, (0, 0))
+
+    mouse_pos = pg.mouse.get_pos()
+    pressed = pg.mouse.get_pressed()
+
+    button_sounds_pressed_col = button_sounds_pressed.get_rect(x=260, y=38)
+    button_back_pressed_col = button_back_pressed.get_rect(x=172, y=194)
+
+    button_plus_pressed_col = button_plus_pressed.get_rect(x=132, y=84)
+    button_minus_pressed_col = button_minus_pressed.get_rect(x=40, y=84)
+
+    button_plus_pressed_col1 = button_plus_pressed.get_rect(x=132, y=140)
+    button_minus_pressed_col1 = button_minus_pressed.get_rect(x=40, y=140)
+
+    button_left_pressed_col1 = button_left_pressed.get_rect(x=248, y=90)
+    button_right_pressed_col1 = button_right_pressed.get_rect(x=316, y=138)
+
+    if button_sounds_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_sounds_pressed, (260, 38))
+
+    elif button_back_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_back_pressed, (172, 194))
+
+    elif button_left_pressed_col1.collidepoint(mouse_pos):
+        screen.blit(button_left_pressed, (248, 90))
+
+    elif button_right_pressed_col1.collidepoint(mouse_pos):
+        screen.blit(button_right_pressed, (316, 138))
+
+
+
+
+    elif button_plus_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_plus_pressed, (132, 84))
+
+    elif button_minus_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_minus_pressed, (40, 84))
+
+    elif button_plus_pressed_col1.collidepoint(mouse_pos):
+        screen.blit(button_plus_pressed, (132, 140))
+
+    elif button_minus_pressed_col1.collidepoint(mouse_pos):
+        screen.blit(button_minus_pressed, (40, 140))
+
+    if particles == 0:
+        screen.blit(scala_particles_0, (54, 84))
+    elif particles == 1:
+        screen.blit(scala_particles_1, (54, 84))
+    elif particles == 2:
+        screen.blit(scala_particles_2, (54, 84))
+    elif particles == 3:
+        screen.blit(scala_particles_3, (54, 84))
+    elif particles == 4:
+        screen.blit(scala_particles_4, (54, 84))
+    elif particles == 5:
+        screen.blit(scala_particles_5, (54, 84))
+    elif particles == 6:
+        screen.blit(scala_particles_6, (54, 84))
+    elif particles == 7:
+        screen.blit(scala_particles_7, (54, 84))
+    elif particles == 8:
+        screen.blit(scala_particles_8, (54, 84))
+    elif particles == 9:
+        screen.blit(scala_particles_9, (54, 84))
+    elif particles == 10:
+        screen.blit(scala_particles_10, (54, 84))
+    elif particles == 11:
+        screen.blit(scala_particles_11, (54, 84))
+    elif particles == 12:
+        screen.blit(scala_particles_12, (54, 84))
+
+    if fov == 0:
+        screen.blit(scala_particles_0, (54, 140))
+    elif fov == 1:
+        screen.blit(scala_particles_1, (54, 140))
+    elif fov == 2:
+        screen.blit(scala_particles_2, (54, 140))
+    elif fov == 3:
+        screen.blit(scala_particles_3, (54, 140))
+    elif fov == 4:
+        screen.blit(scala_particles_4, (54, 140))
+    elif fov == 5:
+        screen.blit(scala_particles_5, (54, 140))
+    elif fov == 6:
+        screen.blit(scala_particles_6, (54, 140))
+    elif fov == 7:
+        screen.blit(scala_particles_7, (54, 140))
+    elif fov == 8:
+        screen.blit(scala_particles_8, (54, 140))
+    elif fov == 9:
+        screen.blit(scala_particles_9, (54, 140))
+    elif fov == 10:
+        screen.blit(scala_particles_10, (54, 140))
+    elif fov == 11:
+        screen.blit(scala_particles_11, (54, 140))
+    elif fov == 12:
+        screen.blit(scala_particles_12, (54, 140))
+
+    if pressed[0]:
+
+        if button_sounds_pressed_col.collidepoint(mouse_pos) and pressed[0]:
+            number_screen = 7
+
+        elif button_back_pressed_col.collidepoint(mouse_pos) and pressed[0]:
+            shadowing(1,fon_menu)
+
+
+        elif button_plus_pressed_col.collidepoint(mouse_pos):
+            if particles < 12:
+                particles += 1
+        elif button_minus_pressed_col.collidepoint(mouse_pos):
+            if particles > 0:
+                particles -= 1
+
+
+
+        elif button_plus_pressed_col1.collidepoint(mouse_pos):
+            if fov < 12:
+                fov += 1
+        elif button_minus_pressed_col1.collidepoint(mouse_pos):
+            if fov > 0:
+                fov -= 1
+
+def screen_settings_sounds():
+    global number_screen
+
+    screen.blit(fon_settings_sounds, (0, 0))
+
+    mouse_pos = pg.mouse.get_pos()
+    pressed = pg.mouse.get_pressed()
+
+    button_display_pressed_col = button_display_pressed.get_rect(x=62, y=38)
+    button_back_pressed_col = button_back_pressed.get_rect(x=172, y=194)
+
+    if button_display_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_display_pressed, (62, 38))
+
+    elif button_back_pressed_col.collidepoint(mouse_pos):
+        screen.blit(button_back_pressed, (172, 194))
+
+    if pressed[0]:
+        if button_display_pressed_col.collidepoint(mouse_pos) and pressed[0]:
+            number_screen = 6
+
+        elif button_back_pressed_col.collidepoint(mouse_pos) and pressed[0]:
+            shadowing(1,fon_menu)
+def screen_death():
+    global number_screen
+
+    screen.blit(fon_menu_death,(0,0,))
+    # screen.blit(back_death_najata,(163, 172))
+
+    button_back_not_pressed_col = back_death_najata.get_rect(x=163, y=172)
+
+    mouse_pos = pg.mouse.get_pos()
+    pressed = pg.mouse.get_pressed()
+
+    if button_back_not_pressed_col.collidepoint(mouse_pos):
+        screen.blit(back_death_najata, (163, 172))
+
+    if pressed[0]:
+        if button_back_not_pressed_col.collidepoint(mouse_pos):
+            shadowing(1, fon_menu)
+
+
+
+#--------------------------ф-циэ джля игры--------------------------------
 right_hand_x = 5
 right_hand_y = -10
 
@@ -167,7 +577,10 @@ def draw_gui(ammo, health):
     else:
         screen.blit(gui_healing_binti, (26,29))
 
-# -------------- персонажжааав"!!!! -------------- #
+
+
+
+#-----------------------------класс игрока-----------------------------
 class Human(pg.sprite.Sprite):
     def __init__(self, char_type, player_x, player_y, speed):
         pg.sprite.Sprite.__init__(self)
@@ -204,6 +617,8 @@ class Human(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (player_x, player_y)
         self.hitbox = self.rect.copy()
+        self.mask = pg.mask.from_surface(self.image)
+        self.mask_rect = self.image.get_rect(center=self.rect.center)
 
     def update_hitbox(self):
         offset_x = int(self.rect.width * 0.25)
@@ -214,6 +629,13 @@ class Human(pg.sprite.Sprite):
                               self.rect.y + offset_y,
                               width,
                               height)
+
+    def update_mask(self):
+        image = self.image
+        if self.flip:
+            image = pg.transform.flip(self.image, True, False)
+        self.mask = pg.mask.from_surface(image)
+        self.mask_rect = image.get_rect(topleft=(self.rect.x, self.rect.y))
 
     def move(self, moving_left, moving_right):
         global kicking
@@ -328,11 +750,15 @@ class Human(pg.sprite.Sprite):
         )
 
         self.update_hitbox()
+        self.update_mask()
 
 player = Human('player', 370, 157, 1)
 camera_scroll = 0
 
-# -------------- ЗЗЗЗОМБИ"!!!! -------------- #
+
+
+
+#----------------------------класс зомби и стрельбо------------------------------
 class Zombie:
     def __init__(self, zombie_type, x, y):
         self.alive = True
@@ -374,20 +800,28 @@ class Zombie:
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
         self.hitbox = self.rect.copy()
+        self.mask = pg.mask.from_surface(self.image)
+        self.mask_rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
+
         self.attack_cooldown = 900  # ms
         self.last_attack_time = 0
 
         self.knockbacked = False
         self.knockback_dir = 0
         self.knockback_start_time = 0
-        self.knockback_delay = 280  # задержка перед началом отскока (мс)
-        self.knockback_anim_duration = 250  # время "пролета" отскока (мс)
-        self.freeze_duration = 1000  # замирает после (мс)
+        self.knockback_delay = 280
+        self.knockback_anim_duration = 250
+        self.freeze_duration = 1000
         self.pos_x = x
         self._knockback_distance = 0
         self._knockback_from_x = x
         self._knockback_applied = False
 
+        # death animation state
+        self.dying = False
+        self.death_anim_finished = False
+        self.death_lay_start_time = None
+        self.death_lay_duration = 1200  # ms
 
     def update_hitbox(self):
         offset_x = int(self.rect.width * 0.25)
@@ -399,41 +833,47 @@ class Zombie:
                               width,
                               height)
 
+    def update_mask(self, camera_scroll=0):
+        image = self.image
+        if self.flip:
+            image = pg.transform.flip(self.image, True, False)
+        draw_rect = self.rect.copy()
+        draw_rect.x -= camera_scroll
+        self.mask = pg.mask.from_surface(image)
+        self.mask_rect = image.get_rect(topleft=(draw_rect.x, draw_rect.y))
+
     def move_and_attack(self, player):
+        if self.dying or self.death_anim_finished:
+            return
         now = pg.time.get_ticks()
         if self.knockbacked:
             elapsed = now - self.knockback_start_time
 
-            # 1. Ждем задержку перед стартом отскока
             if elapsed < self.knockback_delay:
-                self.update_action(0)  # idle
+                self.update_action(0)
                 return
 
-            # 2. Анимируем "отъезжание"
             anim_time = elapsed - self.knockback_delay
             if anim_time < self.knockback_anim_duration:
                 progress = anim_time / self.knockback_anim_duration
                 shift = self._knockback_distance * progress * self.knockback_dir
                 self.pos_x = self._knockback_from_x + shift
                 self.rect.x = int(self.pos_x)
-                self.update_action(0)  # idle
+                self.update_action(0)
                 return
 
-            # 3. Замереть после отскока
             if anim_time < self.knockback_anim_duration + self.freeze_duration:
                 self.pos_x = self._knockback_from_x + self._knockback_distance * self.knockback_dir
                 self.rect.x = int(self.pos_x)
                 self.update_action(0)
                 return
 
-            # 4. Вернуться в обычный режим
             self.knockbacked = False
 
-        # --- обычное поведение ---
         dx = player.rect.centerx - self.rect.centerx
         distance = abs(dx)
         if distance <= 25:
-            self.update_action(2)  # attack
+            self.update_action(2)
             if now - self.last_attack_time > self.attack_cooldown:
                 global health
                 health = max(0, health - 1)
@@ -451,13 +891,29 @@ class Zombie:
             self.rect.x = int(self.pos_x)
 
     def update_animation(self):
-        # Анимация с разной скоростью для разных действий
+        # death animation
+        if self.dying:
+            ANIMATION_COOLDOWN = 80
+            self.action = 3  # death
+            if pg.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
+                self.update_time = pg.time.get_ticks()
+                self.frame_index += 1
+            if self.frame_index >= len(self.animation_list[self.action]):
+                self.frame_index = len(self.animation_list[self.action]) - 1
+                if self.death_lay_start_time is None:
+                    self.death_lay_start_time = pg.time.get_ticks()
+            self.image = self.animation_list[self.action][self.frame_index]
+            if self.death_lay_start_time is not None:
+                if pg.time.get_ticks() - self.death_lay_start_time > self.death_lay_duration:
+                    self.death_anim_finished = True
+            return
+
         if self.action == 1:
-            ANIMATION_COOLDOWN = 120  # walk
+            ANIMATION_COOLDOWN = 120
         elif self.action == 2:
-            ANIMATION_COOLDOWN = 80   # attack
+            ANIMATION_COOLDOWN = 80
         else:
-            ANIMATION_COOLDOWN = 200  # idle
+            ANIMATION_COOLDOWN = 200
 
         frame_to_show = int(self.frame_index)
         self.image = self.animation_list[self.action][frame_to_show]
@@ -468,13 +924,15 @@ class Zombie:
             self.frame_index = 0
 
     def update_action(self, new_action):
+        if self.dying or self.death_anim_finished:
+            return
         if new_action != self.action:
             self.action = new_action
             self.frame_index = 0
             self.update_time = pg.time.get_ticks()
 
     def knockback(self, from_x, distance=20):
-        if not self.knockbacked:
+        if not self.knockbacked and not self.dying and not self.death_anim_finished:
             if self.rect.centerx < from_x:
                 self.knockback_dir = -1
             else:
@@ -485,8 +943,17 @@ class Zombie:
             self._knockback_from_x = self.pos_x
             self._knockback_applied = False
 
+    def die(self):
+        if not self.dying and not self.death_anim_finished:
+            self.dying = True
+            self.frame_index = 0
+            self.update_time = pg.time.get_ticks()
+            self.action = 3
+            self.death_lay_start_time = None
+
     def draw(self, camera_scroll):
-        # Тень
+        if self.death_anim_finished:
+            return
         shadow = self.image.copy().convert_alpha()
         shadow.fill((0, 0, 0, 80), special_flags=pg.BLEND_RGBA_MULT)
         shadow = pg.transform.flip(shadow, self.flip, True)
@@ -497,20 +964,17 @@ class Zombie:
 
         draw_rect = self.rect.copy()
         draw_rect.x -= camera_scroll
-        screen.blit(pg.transform.flip(self.image, self.flip, False), draw_rect)
+        if self.dying:
+            draw_rect.y += 23  # Смещение смерти вниз
+
+        if self.flip:
+            image = pg.transform.flip(self.image, True, False)
+        else:
+            image = self.image
+        screen.blit(image, draw_rect)
         self.update_hitbox()
-        # debug
-        # hitbox_debug = self.hitbox.copy()
-        # hitbox_debug.x -= camera_scroll
-        # pg.draw.rect(screen, (255, 0, 0), hitbox_debug, 2)
+        self.update_mask(camera_scroll)
 
-
-# Пример спавна зомби
-zombies = []
-zombies.append(Zombie('zombie_def', 500, 119))
-# Можно добавить еще, например: zombies.append(Zombie('zombie_def', 800, 157))
-
-# -------------- Доп код: вздрищеные пули -------------- #
 shooting_frames = []
 for i in range(6):
     img = pg.image.load(f'player/shooting/{i}.png')
@@ -528,7 +992,7 @@ shooting_frame_duration = 50
 bullets = []
 
 class Bullet:
-    bullet_rotation_offset = 0  # можно скорректировать при необходимости
+    bullet_rotation_offset = 0
 
     def __init__(self, pos, direction, angle):
         self.pos = [pos[0], pos[1]]
@@ -537,175 +1001,270 @@ class Bullet:
         self.angle = angle
         self.spawn_time = pg.time.get_ticks()
         self.frame_duration = 30
+        self.frame = 0
+        self.img = bullet_frames[self.frame]
+        rotated_img = pg.transform.rotate(self.img, self.angle + Bullet.bullet_rotation_offset)
+        self.mask = pg.mask.from_surface(rotated_img)
+        self.mask_rect = rotated_img.get_rect(center=(round(self.pos[0]), round(self.pos[1])))
 
     def update(self):
         self.pos[0] += self.dir[0] * self.speed
         self.pos[1] += self.dir[1] * self.speed
-
-
+        self.frame = min(
+            int((pg.time.get_ticks() - self.spawn_time) // self.frame_duration),
+            len(bullet_frames) - 1
+        )
+        self.img = bullet_frames[self.frame]
+        rotated_img = pg.transform.rotate(self.img, self.angle + Bullet.bullet_rotation_offset)
+        self.mask = pg.mask.from_surface(rotated_img)
+        self.mask_rect = rotated_img.get_rect(center=(round(self.pos[0]), round(self.pos[1])))
 
     def draw(self, surface):
-        current_time = pg.time.get_ticks()
-        elapsed = current_time - self.spawn_time
-        frame_index = min(int(elapsed // self.frame_duration), len(bullet_frames) - 1)
-        img = bullet_frames[frame_index]
-        rotated_img = pg.transform.rotate(img, self.angle + Bullet.bullet_rotation_offset)
+        rotated_img = pg.transform.rotate(self.img, self.angle + Bullet.bullet_rotation_offset)
         rect = rotated_img.get_rect(center=(round(self.pos[0]), round(self.pos[1])))
         surface.blit(rotated_img, rect)
+        self.mask_rect = rect
 
-# -------------------------------------------------------------------------- #
+# --- Логика бесконечного спавна зомби ---
+
+zombies = []
+
+zombie_spawn_timer = 0
+zombie_spawn_interval = 2200  # миллисекунд
+zombie_min_spawn_interval = 500
+
+zombies_killed = 0
+
+def spawn_zombie():
+    # C вероятностью 70% зомби будет справа, иначе слева
+    y = 119  # или другой подходящий Y для платформы
+    if random.random() < 0.7:
+        side = 'right'
+    else:
+        side = 'left'
+    if side == 'left':
+        x = -70  # левее экрана
+    else:
+        x = level_right_bound + 70  # правее экрана
+    zombies.append(Zombie('zombie_def', x, y))
+
+
+spawn_zombie()
+
+
+#------------------------jcycjd jq цикл----------------------------------
 
 run = True
 while run:
     dt = clock.tick(165) / 1000.0
+    now = pg.time.get_ticks()
+
     for event in pg.event.get():
         if event.type == pg.QUIT:
             sys.exit()
 
-        if event.type == pg.MOUSEBUTTONDOWN:
-            if event.button == 1 and ammo > 0 and not is_reloading:
-                ammo -= 1
-                is_shooting = True
-                shooting_start_time = pg.time.get_ticks()
-                player.shooting_flip = player.flip
-                if not player.flip:
-                    right_hand_offset_x = right_hand_x
-                    right_hand_pos_x = player.rect.x + right_hand_offset_x - camera_scroll
-                    right_hand_pos_y = player.rect.y + right_hand_y
-                else:
-                    frame_width = player.image.get_width()
-                    right_hand_offset_x = right_hand_x
-                    right_hand_pos_x = player.rect.x + (frame_width - right_hand_offset_x - right_hand.get_width()) - camera_scroll
-                    right_hand_pos_y = player.rect.y + right_hand_y
+        keys = pg.key.get_pressed()
+        # ----------------------------------menu----------------------------------------------------
+        if number_screen == 1:
+            screen_main_menu_no_continue()
 
-                bullet_spawn_x = right_hand_pos_x + right_hand.get_width() // 2
-                bullet_spawn_y = right_hand_pos_y + right_hand.get_height() // 2
+        elif number_screen == 2:
+            screen_ready_to_play()
 
-                mouse_x, mouse_y = pg.mouse.get_pos()
-                vector_x = mouse_x - bullet_spawn_x
-                vector_y = mouse_y - bullet_spawn_y
-                norm = math.sqrt(vector_x**2 + vector_y**2)
-                if norm == 0:
-                    norm = 1
-                direction = (vector_x / norm, vector_y / norm)
-                bullet_angle = (180 / math.pi) * -math.atan2(vector_y, vector_x) - 90
+        elif number_screen == 3:
+            screen_choose_difficulty()
+        elif number_screen == 4:
+            loading_screen_popa()
 
-                bullet_offset = right_hand.get_height() * 1.8
-                start_x = bullet_spawn_x + direction[0] * bullet_offset
-                start_y = bullet_spawn_y + direction[1] * bullet_offset - 2
+        elif number_screen == 6:
+            screen_settings_display()
 
-                new_bullet = Bullet((start_x, start_y), direction, bullet_angle)
-                bullets.append(new_bullet)
+        elif number_screen == 7:
+            screen_settings_sounds()
 
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_a:
-                moving_left = True
+        elif number_screen == 8:
+            screen_death()
 
-            if event.key == pg.K_d:
-                moving_right = True
+# ----------------------------------------game in cikl-------------------------------------------------
+        elif number_screen == 'game':
+            if event.type == pg.MOUSEBUTTONDOWN:
+                if event.button == 1 and ammo > 0 and not is_reloading and health > 0:
+                    ammo -= 1
+                    is_shooting = True
+                    shooting_start_time = pg.time.get_ticks()
+                    player.shooting_flip = player.flip
+                    if not player.flip:
+                        right_hand_offset_x = right_hand_x
+                        right_hand_pos_x = player.rect.x + right_hand_offset_x - camera_scroll
+                        right_hand_pos_y = player.rect.y + right_hand_y
+                    else:
+                        frame_width = player.image.get_width()
+                        right_hand_offset_x = right_hand_x
+                        right_hand_pos_x = player.rect.x + (
+                                    frame_width - right_hand_offset_x - right_hand.get_width()) - camera_scroll
+                        right_hand_pos_y = player.rect.y + right_hand_y
 
-            if event.key == pg.K_e:
-                kicking = True
-                player.update_action(2)
-                # Проверяем пинок — сразу при нажатии
+                    bullet_spawn_x = right_hand_pos_x + right_hand.get_width() // 2
+                    bullet_spawn_y = right_hand_pos_y + right_hand.get_height() // 2
+
+                    mouse_x, mouse_y = pg.mouse.get_pos()
+                    vector_x = mouse_x - bullet_spawn_x
+                    vector_y = mouse_y - bullet_spawn_y
+                    norm = math.sqrt(vector_x ** 2 + vector_y ** 2)
+                    if norm == 0:
+                        norm = 1
+                    direction = (vector_x / norm, vector_y / norm)
+                    bullet_angle = (180 / math.pi) * -math.atan2(vector_y, vector_x) - 90
+
+                    bullet_offset = right_hand.get_height() * 1.8
+                    start_x = bullet_spawn_x + direction[0] * bullet_offset
+                    start_y = bullet_spawn_y + direction[1] * bullet_offset - 2
+
+                    new_bullet = Bullet((start_x, start_y), direction, bullet_angle)
+                    bullets.append(new_bullet)
+
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_a:
+                    moving_left = True
+
+                if event.key == pg.K_d:
+                    moving_right = True
+
+                if event.key == pg.K_e:
+                    kicking = True
+                    player.update_action(2)
+                    for zombie in zombies:
+                        if zombie.alive and not zombie.dying and not zombie.death_anim_finished:
+                            dx = abs(player.rect.centerx - zombie.rect.centerx)
+                            if 22 < dx <= 35:
+                                zombie.knockback(player.rect.centerx, distance=20)
+
+                if event.key == pg.K_r and not is_reloading:
+                    is_reloading = True
+                    reload_start_time = pg.time.get_ticks()
+                if event.key == pg.K_z:
+                    current_time = pg.time.get_ticks()
+                    if current_time >= bandages_next_use_time and not bandages_active:
+                        bandages_active = True
+                        bandages_activation_start_time = current_time
+                        bandages_last_heal_time = current_time
+
+                if event.key == pg.K_h:
+                    current_time = pg.time.get_ticks()
+                    if current_time >= apteka_next_use_time:
+                        health = min(health + 8, max_health)
+                        apteka_next_use_time = current_time + apteka_cooldown
+
+                if event.key == pg.K_ESCAPE:
+                    run = False
+
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_a:
+                    moving_left = False
+                if event.key == pg.K_d:
+                    moving_right = False
+                if event.key == pg.K_ESCAPE:
+                    run = False
+
+            if health <= 0:
+                # Game over: не двигаем игрока и не спавним зомби
+                draw_bg(camera_scroll)
+                player.draw(camera_scroll)
+                draw_gui(ammo, health)
                 for zombie in zombies:
-                    if zombie.alive:
-                        dx = abs(player.rect.centerx - zombie.rect.centerx)
-                        if 22 < dx <= 35:
-                            zombie.knockback(player.rect.centerx, distance=20)
+                    if not zombie.death_anim_finished:
+                        zombie.update_animation()
+                        zombie.draw(camera_scroll)
+                pg.display.update()
+                continue
 
-            if event.key == pg.K_r and not is_reloading:
-                is_reloading = True
+            player.move(moving_left, moving_right)
+            player_screen_x = player.rect.x - camera_scroll
 
-                reload_start_time = pg.time.get_ticks()
-            if event.key == pg.K_z:
+            if player_screen_x > screen_width - 150:
+                camera_scroll = player.rect.x - (screen_width - 150)
+            elif player_screen_x < 100:
+                camera_scroll = player.rect.x - 100
+            camera_scroll = max(level_left_bound, min(camera_scroll, level_right_bound - screen_width))
+
+            mouse_x, _ = pg.mouse.get_pos()
+            if mouse_x < (player.rect.centerx - camera_scroll):
+                player.flip = True
+            else:
+                player.flip = False
+
+            if (moving_left or moving_right) and not kicking:
+                player.update_action(1)
+                if (moving_right and mouse_x < (player.rect.centerx - camera_scroll)) or \
+                        (moving_left and mouse_x > (player.rect.centerx - camera_scroll)):
+                    player.reversed_walk = True
+                else:
+                    player.reversed_walk = False
+            elif not kicking:
+                player.update_action(0)
+                player.reversed_walk = False
+
+            player.update_animation()
+
+            if is_reloading:
                 current_time = pg.time.get_ticks()
+                if current_time - reload_start_time >= reload_duration:
+                    ammo = 5
+                    is_reloading = False
 
-                if current_time >= bandages_next_use_time and not bandages_active:
-                    bandages_active = True
-                    bandages_activation_start_time = current_time
-                    bandages_last_heal_time = current_time
+            current_time = pg.time.get_ticks()
+            if bandages_active:
+                if current_time - bandages_last_heal_time >= 1000:
+                    health = min(health + 1, max_health)
+                    bandages_last_heal_time += 1000
+                if current_time - bandages_activation_start_time >= bandages_duration:
+                    bandages_active = False
+                    bandages_next_use_time = bandages_activation_start_time + bandages_cooldown
 
-            if event.key == pg.K_h:
-                current_time = pg.time.get_ticks()
+            # --- Спавн зомби по таймеру ---
+            if now - zombie_spawn_timer > zombie_spawn_interval:
+                spawn_zombie()
+                zombie_spawn_timer = now
 
-                if current_time >= apteka_next_use_time:
-                    health = min(health + 8, max_health)
-                    apteka_next_use_time = current_time + apteka_cooldown
+            draw_bg(camera_scroll)
+            player.draw(camera_scroll)
+            draw_gui(ammo, health)
 
-            if event.key == pg.K_ESCAPE:
-                run = False
+            for zombie in zombies:
+                if zombie.alive and not zombie.death_anim_finished:
+                    zombie.move_and_attack(player)
+                    zombie.update_animation()
+                    zombie.draw(camera_scroll)
+                elif zombie.dying and not zombie.death_anim_finished:
+                    zombie.update_animation()
+                    zombie.draw(camera_scroll)
 
-        if event.type == pg.KEYUP:
-            if event.key == pg.K_a:
-                moving_left = False
-            if event.key == pg.K_d:
-                moving_right = False
-            if event.key == pg.K_ESCAPE:
-                run = False
+            bullets_to_remove = []
+            for bullet in bullets:
+                bullet.update()
+                bullet.draw(screen)
+                for zombie in zombies:
+                    if zombie.alive and not zombie.dying and not zombie.death_anim_finished:
+                        offset = (zombie.mask_rect.x - bullet.mask_rect.x, zombie.mask_rect.y - bullet.mask_rect.y)
+                        if bullet.mask.overlap(zombie.mask, offset):
+                            zombie.knockback(bullet.pos[0], distance=22)
+                            zombie.die()
+                            bullets_to_remove.append(bullet)
+                            zombies_killed += 1
+                            # Ускоряем спавн каждые 10 зомби
+                            if zombies_killed % 10 == 0 and zombie_spawn_interval > zombie_min_spawn_interval:
+                                zombie_spawn_interval = max(zombie_min_spawn_interval, zombie_spawn_interval - 250)
+                            break
 
-    player.move(moving_left, moving_right)
-    player_screen_x = player.rect.x - camera_scroll
+            bullets = [b for b in bullets if b not in bullets_to_remove]
 
-    if player_screen_x > screen_width - 150:
-        camera_scroll = player.rect.x - (screen_width - 150)
-    elif player_screen_x < 100:
-        camera_scroll = player.rect.x - 100
-    camera_scroll = max(level_left_bound, min(camera_scroll, level_right_bound - screen_width))
+            if is_reloading:
+                reload_rect = gui_reload.get_rect(center=(screen_width // 2, 30))
+                screen.blit(gui_reload, reload_rect)
 
-    mouse_x, _ = pg.mouse.get_pos()
-    if mouse_x < (player.rect.centerx - camera_scroll):
-        player.flip = True
-    else:
-        player.flip = False
+            pg.display.update()
 
-    if (moving_left or moving_right) and not kicking:
-        player.update_action(1)
-        if (moving_right and mouse_x < (player.rect.centerx - camera_scroll)) or \
-           (moving_left and mouse_x > (player.rect.centerx - camera_scroll)):
-            player.reversed_walk = True
-        else:
-            player.reversed_walk = False
-    elif not kicking:
-        player.update_action(0)
-        player.reversed_walk = False
+# -----------------------------------------------------------------------------------------
 
-    player.update_animation()
-
-    if is_reloading:
-        current_time = pg.time.get_ticks()
-        if current_time - reload_start_time >= reload_duration:
-            ammo = 5
-            is_reloading = False
-
-    current_time = pg.time.get_ticks()
-    if bandages_active:
-        if current_time - bandages_last_heal_time >= 1000:
-            health = min(health + 1, max_health)
-            bandages_last_heal_time += 1000
-        if current_time - bandages_activation_start_time >= bandages_duration:
-            bandages_active = False
-            bandages_next_use_time = bandages_activation_start_time + bandages_cooldown
-
-    draw_bg(camera_scroll)
-    player.draw(camera_scroll)
-    draw_gui(ammo, health)
-
-    # --- ZOMBIES: движение, атака, анимации, отрисовка
-    for zombie in zombies:
-        if zombie.alive:
-            zombie.move_and_attack(player)
-            zombie.update_animation()
-            zombie.draw(camera_scroll)
-
-    for bullet in bullets:
-        bullet.update()
-        bullet.draw(screen)
-
-    if is_reloading:
-        reload_rect = gui_reload.get_rect(center=(screen_width // 2, 30))
-        screen.blit(gui_reload, reload_rect)
 
     pg.display.update()
-
-pg.quit()
